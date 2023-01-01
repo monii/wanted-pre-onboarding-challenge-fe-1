@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import AuthApi from "../../api/auth";
@@ -11,7 +11,10 @@ function Login() {
 
   const loginpQuery = useQuery(["signupQuery"], () => AuthApi.login(login), {
     enabled: false,
-    onSuccess: () => navigate("/auth/login"),
+    onSuccess: (data) => {
+      localStorage.setItem("AT", data.token);
+      navigate("/");
+    },
   });
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,6 +26,12 @@ function Login() {
     loginpQuery.refetch();
   };
 
+  useEffect(() => {
+    const accessToken = localStorage.getItem("AT");
+    if (accessToken) {
+      navigate("/");
+    }
+  }, []);
   return (
     <Style.LoginContainter>
       <Style.TitleSection>
