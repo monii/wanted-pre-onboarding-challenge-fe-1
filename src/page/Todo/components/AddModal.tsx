@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import styled from "styled-components";
 import TodoApi from "../../../api/todo";
-import { TodoInput } from "../../../type/todo";
+import { CreateTodo, TodoInput } from "../../../type/todo";
 
 interface Props {
   open: boolean;
@@ -13,11 +13,13 @@ interface Props {
 
 function AddModal({ open, token, closeModal }: Props) {
   const [todo, setTodo] = useState<TodoInput>({ title: "", content: "" });
-  const createTodoMutate = useMutation(() => TodoApi.createTodo(token, todo));
+  const createTodoMutate = useMutation(({ token, todo }: CreateTodo) =>
+    TodoApi.createTodo({ token, todo })
+  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    createTodoMutate.mutate();
+    createTodoMutate.mutate({ token, todo });
     closeModal();
   };
 
