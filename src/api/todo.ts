@@ -1,5 +1,5 @@
 import { Axios } from "../environment/axios";
-import { Todo, TodoInput } from "../type/todo";
+import { CreateTodo, DeleteTodo, Todo, TodoInput } from "../type/todo";
 
 const TodoApi = {
   getTodos: async (token: string | null): Promise<Todo[]> => {
@@ -10,19 +10,24 @@ const TodoApi = {
     });
     return data.data;
   },
-  createTodo: async (
-    token: string | null,
-    todoInput: TodoInput
-  ): Promise<Todo> => {
+  createTodo: async ({ token, todo }: CreateTodo): Promise<Todo> => {
     const { data } = await Axios.post(
       "/todos",
-      { ...todoInput },
+      { ...todo },
       {
         headers: {
           Authorization: token,
         },
       }
     );
+    return data;
+  },
+  deleteTodo: async ({ token, id }: DeleteTodo) => {
+    const { data } = await Axios.delete(`/todos/${id}`, {
+      headers: {
+        Authorization: token,
+      },
+    });
     return data;
   },
 };
