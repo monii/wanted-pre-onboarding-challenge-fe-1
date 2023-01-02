@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import AuthApi from "../../api/auth";
@@ -26,12 +26,6 @@ function Login() {
     loginpQuery.refetch();
   };
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem("AT");
-    if (accessToken) {
-      navigate("/");
-    }
-  }, []);
   return (
     <Style.LoginContainter>
       <Style.TitleSection>
