@@ -6,7 +6,7 @@ export interface Todo {
   updatedAt: string;
 }
 
-export interface DeleteTodo {
+export interface IdWithToken {
   token: string | null;
   id: string;
 }

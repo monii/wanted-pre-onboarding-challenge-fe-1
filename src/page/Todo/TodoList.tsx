@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import TodoApi from "../../api/todo";
-import { DeleteTodo, Todo } from "../../type/todo";
+import { IdWithToken, Todo } from "../../type/todo";
 import AddModal from "./components/AddModal";
 
 function TodoList() {
@@ -27,11 +27,15 @@ function TodoList() {
   );
 
   const deleteTodoMutation = useMutation(
-    ({ token, id }: DeleteTodo) => TodoApi.deleteTodo({ token, id }),
+    ({ token, id }: IdWithToken) => TodoApi.deleteTodo({ token, id }),
     {
       onSuccess: () => getTodoListQuery.refetch(),
     }
   );
+
+  const updateTodo = (id: string) => {
+    navigate(`/todo/:${id}`, { state: { id } });
+  };
 
   const deleteTodo = (id: string) => {
     deleteTodoMutation.mutate({ token: accessToken, id });
@@ -76,7 +80,9 @@ function TodoList() {
             <Style.Todo>
               <Style.CreateDate>{getDate(todo.createdAt)}</Style.CreateDate>
               <Style.TodoTitle>{todo.title}</Style.TodoTitle>
-              <Style.TodoUpdateBtn>수정</Style.TodoUpdateBtn>
+              <Style.TodoUpdateBtn onClick={() => updateTodo(todo.id)}>
+                수정
+              </Style.TodoUpdateBtn>
               <Style.TodoDeleteButton onClick={() => deleteTodo(todo.id)}>
                 삭제
               </Style.TodoDeleteButton>
