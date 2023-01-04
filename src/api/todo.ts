@@ -1,5 +1,5 @@
 import { Axios } from "../environment/axios";
-import { CreateTodo, IdWithToken, Todo } from "../type/todo";
+import { CreateTodo, IdWithToken, Todo, UpdateTodo } from "../type/todo";
 
 const TodoApi = {
   getTodos: async (token: string | null): Promise<Todo[]> => {
@@ -22,13 +22,25 @@ const TodoApi = {
     );
     return data;
   },
-  getTodoById: async ({ token, id }: IdWithToken) => {
+  getTodoById: async ({ token, id }: IdWithToken): Promise<Todo> => {
     const { data } = await Axios.get(`/todos/${id}`, {
       headers: {
         Authorization: token,
       },
     });
-    return data;
+    return data.data;
+  },
+  updateTodo: async ({ token, todo, id }: UpdateTodo): Promise<Todo> => {
+    const { data } = await Axios.put(
+      `/todos/${id}`,
+      { ...todo },
+      {
+        headers: {
+          Authorization: token,
+        },
+      }
+    );
+    return data.data;
   },
   deleteTodo: async ({ token, id }: IdWithToken) => {
     const { data } = await Axios.delete(`/todos/${id}`, {

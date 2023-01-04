@@ -16,4 +16,10 @@ export interface CreateTodo {
   todo: TodoInput;
 }
 
+export interface UpdateTodo {
+  token: string | null;
+  todo: TodoInput;
+  id: string;
+}
+
 export type TodoInput = Pick<Todo, "title" | "content">;

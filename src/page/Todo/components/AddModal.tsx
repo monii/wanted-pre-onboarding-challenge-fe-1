@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import TodoApi from "../../../api/todo";
 import { CreateTodo, TodoInput } from "../../../type/todo";
+import TodoForm from "./TodoForm";
 
 interface Props {
   open: boolean;
@@ -33,29 +34,13 @@ function AddModal({ open, token, closeModal }: Props) {
         <Style.Title>오늘의 할일</Style.Title>
       </Style.TitleSection>
       <Style.TodoFormSection>
-        <Style.TodoForm onSubmit={handleSubmit}>
-          <Style.TodoInputWrap>
-            <Style.InputLabel>제목</Style.InputLabel>
-            <Style.Input
-              type="text"
-              name="title"
-              value={todo.title}
-              onChange={(e) => handleInput(e)}
-            />
-          </Style.TodoInputWrap>
-          <Style.TodoInputWrap>
-            <Style.InputLabel>상세 내용</Style.InputLabel>
-            <Style.Input
-              type="text"
-              name="content"
-              value={todo.content}
-              onChange={(e) => handleInput(e)}
-            />
-          </Style.TodoInputWrap>
-          <Style.AddButtonWrap>
-            <Style.AddButton>추가 </Style.AddButton>
-          </Style.AddButtonWrap>
-        </Style.TodoForm>
+        <TodoForm
+          todo={todo}
+          buttonText="추가"
+          bgColor="#1C6758"
+          handleInput={handleInput}
+          handleSubmit={handleSubmit}
+        />
       </Style.TodoFormSection>
     </Style.AddTodoContainer>
   );
@@ -78,19 +63,4 @@ const Style = {
     display: flex;
     flex-direction: column;
   `,
-  TodoForm: styled.form``,
-  TodoInputWrap: styled.div`
-    display: flex;
-    gap: 24px;
-    margin-bottom: 16px;
-  `,
-  InputLabel: styled.span``,
-  Input: styled.input`
-    flex-grow: 1;
-  `,
-  AddButtonWrap: styled.div`
-    display: flex;
-    justify-content: center;
-  `,
-  AddButton: styled.button``,
 };

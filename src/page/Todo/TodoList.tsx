@@ -3,14 +3,20 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { css } from "styled-components";
 import TodoApi from "../../api/todo";
-import { IdWithToken, Todo } from "../../type/todo";
+import { IdWithToken, Todo, TodoInput, UpdateTodo } from "../../type/todo";
 import AddModal from "./components/AddModal";
+import TodoForm from "./components/TodoForm";
 
 function TodoList() {
   const accessToken = localStorage.getItem("AT");
   const navigate = useNavigate();
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [todoDetail, setTodoDetail] = useState<TodoInput>({
+    title: "",
+    content: "",
+  });
   const [isOpen, setIsOpen] = useState(false);
+  const [todoId, setTodoId] = useState<string>("");
 
   const getTodoListQuery = useQuery(
     ["getTodoListQuery", accessToken],
@@ -26,6 +32,42 @@ function TodoList() {
     }
   );
 
+  const getTodoDetailQuery = useQuery(
+    ["getTodoDetail", todoId],
+    () => TodoApi.getTodoById({ token: accessToken, id: todoId }),
+    {
+      onSuccess: (data) => setTodoDetail(data),
+      onError: () => {
+        alert("로그인이 만료 되었습니다.");
+        navigate("/auth/login");
+      },
+      retry: 0,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  const updateTodoMutate = useMutation(
+    ({ token, todo, id }: UpdateTodo) =>
+      TodoApi.updateTodo({ token, todo: todoDetail, id: todoId }),
+    {
+      onSuccess: () => UpdateList(),
+    }
+  );
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    updateTodoMutate.mutate({
+      token: accessToken,
+      todo: todoDetail,
+      id: todoId,
+    });
+  };
+
+  const UpdateList = () => {
+    setTodoId("");
+    getTodoListQuery.refetch();
+  };
+
   const deleteTodoMutation = useMutation(
     ({ token, id }: IdWithToken) => TodoApi.deleteTodo({ token, id }),
     {
@@ -33,8 +75,22 @@ function TodoList() {
     }
   );
 
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTodoDetail({ ...todoDetail, [e.target.name]: e.target.value });
+  };
+
   const updateTodo = (id: string) => {
-    navigate(`/todo/:${id}`, { state: { id } });
+    const todoIdFromLocalstorage = localStorage.getItem("CETI");
+    const isEditing = todoIdFromLocalstorage === id;
+
+    if (isEditing) {
+      localStorage.removeItem("CETI");
+      setTodoId("");
+    } else {
+      setTodoId(id);
+      localStorage.setItem("CETI", id);
+      getTodoDetailQuery.refetch();
+    }
   };
 
   const deleteTodo = (id: string) => {
@@ -62,6 +118,13 @@ function TodoList() {
     getTodoListQuery.refetch();
   }, [isOpen]);
 
+  useEffect(() => {
+    const editTodoId = localStorage.getItem("CETI");
+    if (editTodoId) {
+      setTodoId(editTodoId);
+    }
+  }, []);
+
   return (
     <Style.TodoListContainer>
       <Style.TitleSection>
@@ -78,14 +141,25 @@ function TodoList() {
         {todos.length > 0 &&
           todos.map((todo) => (
             <Style.Todo>
-              <Style.CreateDate>{getDate(todo.createdAt)}</Style.CreateDate>
-              <Style.TodoTitle>{todo.title}</Style.TodoTitle>
-              <Style.TodoUpdateBtn onClick={() => updateTodo(todo.id)}>
-                수정
-              </Style.TodoUpdateBtn>
-              <Style.TodoDeleteButton onClick={() => deleteTodo(todo.id)}>
-                삭제
-              </Style.TodoDeleteButton>
+              <Style.OriginTodoWrap>
+                <Style.CreateDate>{getDate(todo.createdAt)}</Style.CreateDate>
+                <Style.TodoTitle>{todo.title}</Style.TodoTitle>
+                <Style.TodoUpdateBtn onClick={() => updateTodo(todo.id)}>
+                  {todo.id === todoId ? "취소" : "수정"}
+                </Style.TodoUpdateBtn>
+                <Style.TodoDeleteButton onClick={() => deleteTodo(todo.id)}>
+                  삭제
+                </Style.TodoDeleteButton>
+              </Style.OriginTodoWrap>
+              <Style.EditTodoWrap isShowEditForm={todo.id === todoId}>
+                <TodoForm
+                  todo={todoDetail}
+                  buttonText="수정"
+                  bgColor="#005792"
+                  handleInput={handleInput}
+                  handleSubmit={handleSubmit}
+                />
+              </Style.EditTodoWrap>
             </Style.Todo>
           ))}
       </Style.TodoListSection>
@@ -105,10 +179,12 @@ const TodoListLayout = css`
 
 const Button = css`
   min-width: 60px;
+  max-height: 40px;
   padding: 8px 12px;
   color: white;
   border: none;
   cursor: pointer;
+  border-radius: 5px;
 `;
 
 const Style = {
@@ -124,6 +200,8 @@ const Style = {
   Title: styled.h3``,
   TodoListSection: styled.section``,
   AddButton: styled.button`
+    ${Button}
+    background-color: #1C6758;
     max-height: 30px;
   `,
   TodoListTitleWrap: styled.div`
@@ -136,6 +214,7 @@ const Style = {
   `,
   TodoTitle: styled.p`
     flex-grow: 1;
+    text-align: center;
   `,
   TodoUpdate: styled.p`
     min-width: 60px;
@@ -144,19 +223,28 @@ const Style = {
     min-width: 60px;
   `,
   Todo: styled.div`
-    ${TodoListLayout}
+    display: flex;
+    flex-direction: column;
     border-bottom: 1px solid #c9c9c9;
     cursor: pointer;
   `,
+  OriginTodoWrap: styled.div`
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 4px 0px;
+  `,
+  EditTodoWrap: styled.div<{ isShowEditForm: boolean }>`
+    display: ${(props) => (props.isShowEditForm ? "block" : "none")};
+    margin: ${(props) => (props.isShowEditForm ? "20px 0px" : null)};
+  `,
   TodoUpdateBtn: styled.button`
     ${Button}
-    background-color: #005792;
+    background-color: #005792
   `,
   TodoDeleteButton: styled.button`
     ${Button}
     background-color: #eb2632;
   `,
 };
-function id(accessToken: string | null, id: any) {
-  throw new Error("Function not implemented.");
-}
